@@ -1,6 +1,5 @@
 import cv2
 import pytesseract
-from deep_translator import GoogleTranslator
 from gtts import gTTS
 import pygame
 import tempfile
@@ -11,7 +10,7 @@ import numpy as np
 pygame.mixer.init()
 
 # Si Tesseract no está en PATH, descomenta y corrige la ruta
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def preprocesar_imagen(frame):
     """Preprocesamiento para mejorar reconocimiento manuscrito e impreso."""
@@ -35,25 +34,15 @@ def reconocer_texto(frame):
     custom_config = r'--oem 1 --psm 6'
     
     try:
-        texto = pytesseract.image_to_string(img_pre, lang='spa+eng', config=custom_config)
+        texto = pytesseract.image_to_string(img_pre, lang='spa', config=custom_config)
     except Exception as e:
         print(f"⚠️ Error OCR: {e}")
         texto = ""
     
     return texto.strip()
 
-def traducir_texto(texto, destino='es'):
-    """Traduce automáticamente el texto detectado."""
-    if not texto.strip():
-        return ""
-    try:
-        return GoogleTranslator(source='auto', target=destino).translate(texto)
-    except Exception as e:
-        print(f"⚠️ Error al traducir: {e}")
-        return texto
-
 def reproducir_voz(texto):
-    """Lee en voz alta el texto traducido."""
+    """Lee en voz alta el texto detectado."""
     if not texto.strip():
         print("⚠️ No hay texto para reproducir.")
         return
@@ -85,7 +74,7 @@ while True:
         print("⚠️ No se pudo capturar la imagen.")
         break
 
-    cv2.imshow('OCR Manuscrito + Traducción + Voz', frame)
+    cv2.imshow('OCR Manuscrito + Voz', frame)
     tecla = cv2.waitKey(1) & 0xFF
 
     if tecla == ord('s'):
@@ -95,12 +84,8 @@ while True:
             print("\n🧾 Texto detectado:\n")
             print(texto_detectado)
 
-            traduccion = traducir_texto(texto_detectado, 'es')
-            print("\n🌍 Traducción al español:\n")
-            print(traduccion)
-
-            print("🔊 Leyendo traducción en voz...\n")
-            reproducir_voz(traduccion)
+            print("🔊 Leyendo texto en voz...\n")
+            reproducir_voz(texto_detectado)
         else:
             print("⚠️ No se detectó texto. Intenta mejorar la iluminación o acercar la cámara.")
     elif tecla == ord('q'):
